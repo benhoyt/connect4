@@ -62,7 +62,7 @@ func main() {
 		}
 
 		// Our move
-		makeMove()
+		move := makeMove()
 		end = getEnding(Me)
 		if end == Tie {
 			fmt.Fprintf(os.Stderr, "Tie after my move\n")
@@ -71,6 +71,8 @@ func main() {
 			fmt.Fprintf(os.Stderr, "I won!\n")
 			break
 		}
+		fmt.Fprintf(os.Stderr, "My move: ")
+		fmt.Printf("%d\n", move)
 	}
 
 	draw()
@@ -86,25 +88,25 @@ func get(x, y int) Piece {
 
 func draw() {
 	for y := 0; y < Height; y++ {
-		fmt.Print("| ")
+		fmt.Fprint(os.Stderr, "| ")
 		for x := 0; x < Width; x++ {
 			switch get(x, y) {
 			case Empty:
-				fmt.Print(". ")
+				fmt.Fprint(os.Stderr, ". ")
 			case Me:
-				fmt.Print("M ")
+				fmt.Fprint(os.Stderr, "M ")
 			case You:
-				fmt.Print("Y ")
+				fmt.Fprint(os.Stderr, "Y ")
 			}
 		}
-		fmt.Print("|\n")
+		fmt.Fprint(os.Stderr, "|\n")
 	}
-	fmt.Print("+-", strings.Repeat("-", Width*2), "+\n")
-	fmt.Print("| ")
+	fmt.Fprint(os.Stderr, "+-", strings.Repeat("-", Width*2), "+\n")
+	fmt.Fprint(os.Stderr, "| ")
 	for x := 0; x < Width; x++ {
-		fmt.Printf("%d ", x)
+		fmt.Fprintf(os.Stderr, "%d ", x)
 	}
-	fmt.Print("|\n")
+	fmt.Fprint(os.Stderr, "|\n")
 }
 
 func readMove() int {
@@ -136,24 +138,6 @@ func placeMove(x int, p Piece) bool {
 	}
 	put(x, Height-1, p)
 	return true
-}
-
-func makeMove() int {
-	possibilities := make([]int, 0, Width)
-	for x := 0; x < Width; x++ {
-		if get(x, 0) == Empty {
-			possibilities = append(possibilities, x)
-		}
-	}
-	if len(possibilities) == 0 {
-		return -1
-	}
-	index := rand.Intn(len(possibilities))
-	move := possibilities[index]
-	if !placeMove(move, Me) {
-		panic(fmt.Sprintf("invalid makeMove() %d", move))
-	}	
-	return move
 }
 
 func getEnding(p Piece) Ending {
@@ -188,4 +172,22 @@ func getEnding(p Piece) Ending {
 		return Tie
 	}
 	return Continue
+}
+
+func makeMove() int {
+	possibilities := make([]int, 0, Width)
+	for x := 0; x < Width; x++ {
+		if get(x, 0) == Empty {
+			possibilities = append(possibilities, x)
+		}
+	}
+	if len(possibilities) == 0 {
+		return -1
+	}
+	index := rand.Intn(len(possibilities))
+	move := possibilities[index]
+	if !placeMove(move, Me) {
+		panic(fmt.Sprintf("invalid makeMove() %d", move))
+	}	
+	return move
 }

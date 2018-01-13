@@ -4,35 +4,35 @@ package main
 
 import (
 	"bufio"
-    "fmt"
-    "math/rand"
-    "os"
-    "strconv"
-    "strings"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
 )
 
 const (
-	Width = 7
-	Height = 6
+	Width     = 7
+	Height    = 6
+	LookAhead = 1
 
 	// Piece
 	Empty = 0
-	You = 1
-	Me = 2
+	You   = 1
+	Me    = 2
 
 	// Endings
 	Continue = 0
-	Tie = 1
-	Win = 2
+	Tie      = 1
+	Win      = 2
 )
 
 type (
-	Piece uint8
+	Piece  uint8
 	Ending int
 )
 
 var (
-	grid [Width*Height]Piece
+	grid    [Width * Height]Piece
 	scanner *bufio.Scanner = bufio.NewScanner(os.Stdin)
 )
 
@@ -112,7 +112,7 @@ func draw() {
 func readMove() int {
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-		    fmt.Fprintln(os.Stderr, "reading standard input:", err)
+			fmt.Fprintln(os.Stderr, "reading standard input:", err)
 		}
 		return -1
 	}
@@ -138,6 +138,16 @@ func placeMove(x int, p Piece) bool {
 	}
 	put(x, Height-1, p)
 	return true
+}
+
+func liftMove(x int) {
+	for y := 0; y < Height; y++ {
+		if get(x, y) != Empty {
+			put(x, y, Empty)
+			return
+		}
+	}
+	panic(fmt.Sprintf("invalid liftMove() %d", x))
 }
 
 func getEnding(p Piece) Ending {
@@ -175,6 +185,153 @@ func getEnding(p Piece) Ending {
 }
 
 func makeMove() int {
+	move, _ := pickMove(Me, LookAhead)
+	if move >= 0 {
+		placeMove(move, Me)
+	}
+	return move
+}
+
+func pickMove(piece Piece, lookahead int) (move, score int) {
+	indent := strings.Repeat("  ", LookAhead-lookahead)
+
+	scores := make([]int, Width)
+	for i := range scores {
+		if !placeMove(i, piece) {
+			scores[i] = -20000
+			continue
+		}
+
+		end := getEnding(piece)
+		if end == Win {
+			liftMove(i)
+			fmt.Printf("%spickMove %v: %d is a win\n", indent, piece, i)
+			return i, 10000
+		} else if end == Tie {
+			// scores[i] is 0 already
+			liftMove(i)
+			continue
+		}
+
+		if lookahead > 0 {
+			other := Piece(You)
+			if piece == You {
+				other = Me
+			}
+			_, otherScore := pickMove(other, lookahead-1)
+			scores[i] = -otherScore
+		} else {
+			scores[i] = -getScore(piece)
+		}
+
+		liftMove(i)
+	}
+
+	highest := -20000
+	highestIndex := -1
+	for i := range scores {
+		if scores[i] > highest {
+			highest = scores[i]
+			highestIndex = i
+		}
+	}
+	fmt.Printf("%spickMove %v: scores %v, highest %d (index %d)\n", indent, piece, scores, highest, highestIndex)
+	if highest == -20000 {
+		return -1, highest
+	}
+	return highestIndex, highest
+}
+
+var runScores = map[int]int{
+	1: 1,
+	2: 10,
+	3: 100,
+	4: 1000,
+}
+
+func getScore(piece Piece) int {
+	type pos struct{ x, y int }
+
+	counted := make(map[pos]bool)
+	score := 0
+	for y := 0; y < Height; y++ {
+		for x := 0; x < Width; x++ {
+			p := get(x, y)
+			if p == Empty {
+				continue
+			}
+			if _, ok := counted[pos{x, y}]; ok {
+				// Already counted
+				continue
+			}
+
+			// Scan for run to the right
+			run := 1
+			for i := 1; i < 4 && x+i < Width; i++ {
+				q := get(x+i, y)
+				if q != p {
+					if q == Empty {
+						run++
+					}
+					break
+				}
+				counted[pos{x, y}] = true
+				run++
+			}
+			score += runScores[run]
+
+			// Scan for run down and to the right
+			run = 1
+			for i := 1; i < 4 && x+i < Width && y+i < Height; i++ {
+				q := get(x+i, y+i)
+				if q != p {
+					if q == Empty {
+						run++
+					}
+					break
+				}
+				counted[pos{x, y}] = true
+				run++
+			}
+			score += runScores[run]
+
+			// Scan for run down
+			run = 1
+			for i := 1; i < 4 && y+i < Height; i++ {
+				q := get(x, y+i)
+				if q != p {
+					if q == Empty {
+						run++
+					}
+					break
+				}
+				counted[pos{x, y}] = true
+				run++
+			}
+			score += runScores[run]
+
+			// Scan for run down and to the left
+			run = 1
+			for i := 1; i < 4 && x-i >= 0 && y+i < Height; i++ {
+				q := get(x-i, y+i)
+				if q != p {
+					if q == Empty {
+						run++
+					}
+					break
+				}
+				counted[pos{x, y}] = true
+				run++
+			}
+			score += runScores[run]
+		}
+	}
+
+	return score
+}
+
+/*
+func makeMove() int {
 	possibilities := make([]int, 0, Width)
 	for x := 0; x < Width; x++ {
 		if get(x, 0) == Empty {
@@ -188,6 +345,7 @@ func makeMove() int {
 	move := possibilities[index]
 	if !placeMove(move, Me) {
 		panic(fmt.Sprintf("invalid makeMove() %d", move))
-	}	
+	}
 	return move
 }
+*/

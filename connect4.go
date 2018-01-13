@@ -13,7 +13,7 @@ import (
 const (
 	Width     = 7
 	Height    = 6
-	LookAhead = 1
+	LookAhead = 6
 
 	// Piece
 	Empty = 0
@@ -193,7 +193,7 @@ func makeMove() int {
 }
 
 func pickMove(piece Piece, lookahead int) (move, score int) {
-	indent := strings.Repeat("  ", LookAhead-lookahead)
+//	indent := strings.Repeat("  ", LookAhead-lookahead)
 
 	scores := make([]int, Width)
 	for i := range scores {
@@ -205,7 +205,7 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 		end := getEnding(piece)
 		if end == Win {
 			liftMove(i)
-			fmt.Printf("%spickMove %v: %d is a win\n", indent, piece, i)
+//			fmt.Printf("%spickMove %v: %d is a win\n", indent, piece, i)
 			return i, 10000
 		} else if end == Tie {
 			// scores[i] is 0 already
@@ -235,7 +235,7 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 			highestIndex = i
 		}
 	}
-	fmt.Printf("%spickMove %v: scores %v, highest %d (index %d)\n", indent, piece, scores, highest, highestIndex)
+//	fmt.Printf("%spickMove %v: scores %v, highest %d (index %d)\n", indent, piece, scores, highest, highestIndex)
 	if highest == -20000 {
 		return -1, highest
 	}

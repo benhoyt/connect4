@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	Width     = 7
-	Height    = 6
-	LookAhead = 6
+	Width  = 7
+	Height = 6
 
 	// Piece
 	Empty = 0
@@ -33,13 +32,15 @@ type (
 )
 
 var (
-	grid    [Width * Height]Piece
-	scanner *bufio.Scanner = bufio.NewScanner(os.Stdin)
-	quiet   bool           = true
+	grid      [Width * Height]Piece
+	scanner   *bufio.Scanner = bufio.NewScanner(os.Stdin)
+	quiet     bool
+	lookAhead int
 )
 
 func main() {
-	flag.BoolVar(&quiet, "q", false, "quiet mode (don't show board on stderr)")
+	flag.BoolVar(&quiet, "quiet", false, "don't show prompts or board on stderr")
+	flag.IntVar(&lookAhead, "lookahead", 6, "number of moves to look ahead")
 	flag.Parse()
 
 	exitCode := 0
@@ -206,7 +207,7 @@ func getEnding(p Piece) Ending {
 }
 
 func makeMove() int {
-	move, _ := pickMove(Me, LookAhead)
+	move, _ := pickMove(Me, lookAhead)
 	if move >= 0 {
 		placeMove(move, Me)
 	}

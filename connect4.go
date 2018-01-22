@@ -217,14 +217,14 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 	scores := make([]int, Width)
 	for i := range scores {
 		if !placeMove(i, piece) {
-			scores[i] = -20000
+			scores[i] = -2000000
 			continue
 		}
 
 		end := getEnding(piece)
 		if end == Win {
 			liftMove(i)
-			return i, 10000
+			return i, 1000000
 		} else if end == Tie {
 			// scores[i] is 0 already
 			liftMove(i)
@@ -245,7 +245,7 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 		liftMove(i)
 	}
 
-	highest := -20000
+	highest := -2000000
 	highestIndex := -1
 	for i := range scores {
 		if scores[i] > highest {
@@ -253,7 +253,7 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 			highestIndex = i
 		}
 	}
-	if highest == -20000 {
+	if highest == -2000000 {
 		return -1, highest
 	}
 	return highestIndex, highest
@@ -264,6 +264,7 @@ var runScores = map[int]int{
 	2: 10,
 	3: 100,
 	4: 1000,
+	5: 10000,
 }
 
 func getScore(piece Piece) int {
@@ -287,6 +288,9 @@ func getScore(piece Piece) int {
 			for i := 1; i < 4 && x+i < Width; i++ {
 				q := get(x+i, y)
 				if q != p {
+					if x > 0 && get(x-1, y) == Empty {
+						run++
+					}
 					if q == Empty {
 						run++
 					}
@@ -302,6 +306,9 @@ func getScore(piece Piece) int {
 			for i := 1; i < 4 && x+i < Width && y+i < Height; i++ {
 				q := get(x+i, y+i)
 				if q != p {
+					if x > 0 && y > 0 && get(x-1, y-1) == Empty {
+						run++
+					}
 					if q == Empty {
 						run++
 					}
@@ -317,6 +324,9 @@ func getScore(piece Piece) int {
 			for i := 1; i < 4 && y+i < Height; i++ {
 				q := get(x, y+i)
 				if q != p {
+					if y > 0 && get(x, y-1) == Empty {
+						run++
+					}
 					if q == Empty {
 						run++
 					}
@@ -332,6 +342,9 @@ func getScore(piece Piece) int {
 			for i := 1; i < 4 && x-i >= 0 && y+i < Height; i++ {
 				q := get(x-i, y+i)
 				if q != p {
+					if x+1 < Width && y > 0 && get(x+1, y-1) == Empty {
+						run++
+					}
 					if q == Empty {
 						run++
 					}

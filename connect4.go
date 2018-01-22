@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -34,15 +35,20 @@ type (
 var (
 	grid    [Width * Height]Piece
 	scanner *bufio.Scanner = bufio.NewScanner(os.Stdin)
+	quiet   bool           = true
 )
 
 func main() {
+	flag.BoolVar(&quiet, "q", false, "quiet mode (don't show board on stderr)")
+	flag.Parse()
+
+	exitCode := 0
 	for {
 		draw()
 
 		// Their move
 		for {
-			fmt.Fprintf(os.Stderr, "Enter your move column (0..6): ")
+			vprintf("Enter your move column (0..6): ")
 			move := readMove()
 			if move < 0 {
 				continue
@@ -50,14 +56,16 @@ func main() {
 			if placeMove(move, You) {
 				break
 			}
-			fmt.Fprintf(os.Stderr, "Couldn't make move at column %d\n", move)
+			vprintf("Couldn't make move at column %d\n", move)
 		}
 		end := getEnding(You)
 		if end == Tie {
-			fmt.Fprintf(os.Stderr, "Tie after your move\n")
+			vprintf("Tie after your move\n")
+			exitCode = 3
 			break
 		} else if end == Win {
-			fmt.Fprintf(os.Stderr, "You won!\n")
+			vprintf("You won!\n")
+			exitCode = 2
 			break
 		}
 
@@ -65,17 +73,27 @@ func main() {
 		move := makeMove()
 		end = getEnding(Me)
 		if end == Tie {
-			fmt.Fprintf(os.Stderr, "Tie after my move\n")
+			vprintf("Tie after my move\n")
+			exitCode = 3
 			break
 		} else if end == Win {
-			fmt.Fprintf(os.Stderr, "I won!\n")
+			vprintf("I won!\n")
+			exitCode = 1
 			break
 		}
-		fmt.Fprintf(os.Stderr, "My move: ")
+		vprintf("My move: ")
 		fmt.Printf("%d\n", move)
 	}
 
 	draw()
+
+	os.Exit(exitCode)
+}
+
+func vprintf(format string, args ...interface{}) {
+	if !quiet {
+		fmt.Fprintf(os.Stderr, format, args...)
+	}
 }
 
 func put(x, y int, p Piece) {
@@ -87,6 +105,9 @@ func get(x, y int) Piece {
 }
 
 func draw() {
+	if quiet {
+		return
+	}
 	for y := 0; y < Height; y++ {
 		fmt.Fprint(os.Stderr, "| ")
 		for x := 0; x < Width; x++ {
@@ -104,7 +125,7 @@ func draw() {
 	fmt.Fprint(os.Stderr, "+-", strings.Repeat("-", Width*2), "+\n")
 	fmt.Fprint(os.Stderr, "| ")
 	for x := 0; x < Width; x++ {
-		fmt.Fprintf(os.Stderr, "%d ", x)
+		vprintf("%d ", x)
 	}
 	fmt.Fprint(os.Stderr, "|\n")
 }
@@ -112,7 +133,7 @@ func draw() {
 func readMove() int {
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, "reading standard input:", err)
+			vprintf("error reading standard input: %v\n", err)
 		}
 		return -1
 	}

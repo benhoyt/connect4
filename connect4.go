@@ -193,8 +193,6 @@ func makeMove() int {
 }
 
 func pickMove(piece Piece, lookahead int) (move, score int) {
-//	indent := strings.Repeat("  ", LookAhead-lookahead)
-
 	scores := make([]int, Width)
 	for i := range scores {
 		if !placeMove(i, piece) {
@@ -205,7 +203,6 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 		end := getEnding(piece)
 		if end == Win {
 			liftMove(i)
-//			fmt.Printf("%spickMove %v: %d is a win\n", indent, piece, i)
 			return i, 10000
 		} else if end == Tie {
 			// scores[i] is 0 already
@@ -235,7 +232,6 @@ func pickMove(piece Piece, lookahead int) (move, score int) {
 			highestIndex = i
 		}
 	}
-//	fmt.Printf("%spickMove %v: scores %v, highest %d (index %d)\n", indent, piece, scores, highest, highestIndex)
 	if highest == -20000 {
 		return -1, highest
 	}
@@ -329,23 +325,3 @@ func getScore(piece Piece) int {
 
 	return score
 }
-
-/*
-func makeMove() int {
-	possibilities := make([]int, 0, Width)
-	for x := 0; x < Width; x++ {
-		if get(x, 0) == Empty {
-			possibilities = append(possibilities, x)
-		}
-	}
-	if len(possibilities) == 0 {
-		return -1
-	}
-	index := rand.Intn(len(possibilities))
-	move := possibilities[index]
-	if !placeMove(move, Me) {
-		panic(fmt.Sprintf("invalid makeMove() %d", move))
-	}
-	return move
-}
-*/

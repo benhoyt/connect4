@@ -35,13 +35,21 @@ var (
 	grid      [Width * Height]Piece
 	scanner   *bufio.Scanner = bufio.NewScanner(os.Stdin)
 	quiet     bool
+	start     bool
 	lookAhead int
 )
 
 func main() {
 	flag.BoolVar(&quiet, "quiet", false, "don't show prompts or board on stderr")
+	flag.BoolVar(&start, "start", false, "start the game (make the first move)")
 	flag.IntVar(&lookAhead, "lookahead", 6, "number of moves to look ahead")
 	flag.Parse()
+
+	if start {
+		placeMove(3, Me)
+		vprintf("My move: ")
+		fmt.Printf("3\n")
+	}
 
 	exitCode := 0
 	for {
